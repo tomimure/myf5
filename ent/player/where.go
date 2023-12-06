@@ -169,21 +169,21 @@ func NameContainsFold(v string) predicate.Player {
 	return predicate.Player(sql.FieldContainsFold(FieldName, v))
 }
 
-// HasMatches applies the HasEdge predicate on the "matches" edge.
-func HasMatches() predicate.Player {
+// HasTeams applies the HasEdge predicate on the "teams" edge.
+func HasTeams() predicate.Player {
 	return predicate.Player(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, MatchesTable, MatchesPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, true, TeamsTable, TeamsPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasMatchesWith applies the HasEdge predicate on the "matches" edge with a given conditions (other predicates).
-func HasMatchesWith(preds ...predicate.Match) predicate.Player {
+// HasTeamsWith applies the HasEdge predicate on the "teams" edge with a given conditions (other predicates).
+func HasTeamsWith(preds ...predicate.Team) predicate.Player {
 	return predicate.Player(func(s *sql.Selector) {
-		step := newMatchesStep()
+		step := newTeamsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

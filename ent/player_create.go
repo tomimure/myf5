@@ -7,8 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"myf5/ent/event"
-	"myf5/ent/match"
 	"myf5/ent/player"
+	"myf5/ent/team"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -33,19 +33,19 @@ func (pc *PlayerCreate) SetName(s string) *PlayerCreate {
 	return pc
 }
 
-// AddMatchIDs adds the "matches" edge to the Match entity by IDs.
-func (pc *PlayerCreate) AddMatchIDs(ids ...int) *PlayerCreate {
-	pc.mutation.AddMatchIDs(ids...)
+// AddTeamIDs adds the "teams" edge to the Team entity by IDs.
+func (pc *PlayerCreate) AddTeamIDs(ids ...int) *PlayerCreate {
+	pc.mutation.AddTeamIDs(ids...)
 	return pc
 }
 
-// AddMatches adds the "matches" edges to the Match entity.
-func (pc *PlayerCreate) AddMatches(m ...*Match) *PlayerCreate {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+// AddTeams adds the "teams" edges to the Team entity.
+func (pc *PlayerCreate) AddTeams(t ...*Team) *PlayerCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
 	}
-	return pc.AddMatchIDs(ids...)
+	return pc.AddTeamIDs(ids...)
 }
 
 // AddEventIDs adds the "events" edge to the Event entity by IDs.
@@ -137,15 +137,15 @@ func (pc *PlayerCreate) createSpec() (*Player, *sqlgraph.CreateSpec) {
 		_spec.SetField(player.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if nodes := pc.mutation.MatchesIDs(); len(nodes) > 0 {
+	if nodes := pc.mutation.TeamsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   player.MatchesTable,
-			Columns: player.MatchesPrimaryKey,
+			Inverse: true,
+			Table:   player.TeamsTable,
+			Columns: player.TeamsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(match.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(team.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -16,17 +16,17 @@ const (
 	FieldGlobal = "global"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
-	// EdgeMatches holds the string denoting the matches edge name in mutations.
-	EdgeMatches = "matches"
+	// EdgeTeams holds the string denoting the teams edge name in mutations.
+	EdgeTeams = "teams"
 	// EdgeEvents holds the string denoting the events edge name in mutations.
 	EdgeEvents = "events"
 	// Table holds the table name of the player in the database.
 	Table = "players"
-	// MatchesTable is the table that holds the matches relation/edge. The primary key declared below.
-	MatchesTable = "player_matches"
-	// MatchesInverseTable is the table name for the Match entity.
-	// It exists in this package in order to avoid circular dependency with the "match" package.
-	MatchesInverseTable = "matches"
+	// TeamsTable is the table that holds the teams relation/edge. The primary key declared below.
+	TeamsTable = "team_players"
+	// TeamsInverseTable is the table name for the Team entity.
+	// It exists in this package in order to avoid circular dependency with the "team" package.
+	TeamsInverseTable = "teams"
 	// EventsTable is the table that holds the events relation/edge.
 	EventsTable = "events"
 	// EventsInverseTable is the table name for the Event entity.
@@ -44,9 +44,9 @@ var Columns = []string{
 }
 
 var (
-	// MatchesPrimaryKey and MatchesColumn2 are the table columns denoting the
-	// primary key for the matches relation (M2M).
-	MatchesPrimaryKey = []string{"player_id", "match_id"}
+	// TeamsPrimaryKey and TeamsColumn2 are the table columns denoting the
+	// primary key for the teams relation (M2M).
+	TeamsPrimaryKey = []string{"team_id", "player_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -77,17 +77,17 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
-// ByMatchesCount orders the results by matches count.
-func ByMatchesCount(opts ...sql.OrderTermOption) OrderOption {
+// ByTeamsCount orders the results by teams count.
+func ByTeamsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newMatchesStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newTeamsStep(), opts...)
 	}
 }
 
-// ByMatches orders the results by matches terms.
-func ByMatches(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByTeams orders the results by teams terms.
+func ByTeams(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newMatchesStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newTeamsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -104,11 +104,11 @@ func ByEvents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newEventsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-func newMatchesStep() *sqlgraph.Step {
+func newTeamsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(MatchesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, MatchesTable, MatchesPrimaryKey...),
+		sqlgraph.To(TeamsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, TeamsTable, TeamsPrimaryKey...),
 	)
 }
 func newEventsStep() *sqlgraph.Step {

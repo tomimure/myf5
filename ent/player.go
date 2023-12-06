@@ -28,8 +28,8 @@ type Player struct {
 
 // PlayerEdges holds the relations/edges for other nodes in the graph.
 type PlayerEdges struct {
-	// Matches holds the value of the matches edge.
-	Matches []*Match `json:"matches,omitempty"`
+	// Teams holds the value of the teams edge.
+	Teams []*Team `json:"teams,omitempty"`
 	// Events holds the value of the events edge.
 	Events []*Event `json:"events,omitempty"`
 	// loadedTypes holds the information for reporting if a
@@ -37,13 +37,13 @@ type PlayerEdges struct {
 	loadedTypes [2]bool
 }
 
-// MatchesOrErr returns the Matches value or an error if the edge
+// TeamsOrErr returns the Teams value or an error if the edge
 // was not loaded in eager-loading.
-func (e PlayerEdges) MatchesOrErr() ([]*Match, error) {
+func (e PlayerEdges) TeamsOrErr() ([]*Team, error) {
 	if e.loadedTypes[0] {
-		return e.Matches, nil
+		return e.Teams, nil
 	}
-	return nil, &NotLoadedError{edge: "matches"}
+	return nil, &NotLoadedError{edge: "teams"}
 }
 
 // EventsOrErr returns the Events value or an error if the edge
@@ -110,9 +110,9 @@ func (pl *Player) Value(name string) (ent.Value, error) {
 	return pl.selectValues.Get(name)
 }
 
-// QueryMatches queries the "matches" edge of the Player entity.
-func (pl *Player) QueryMatches() *MatchQuery {
-	return NewPlayerClient(pl.config).QueryMatches(pl)
+// QueryTeams queries the "teams" edge of the Player entity.
+func (pl *Player) QueryTeams() *TeamQuery {
+	return NewPlayerClient(pl.config).QueryTeams(pl)
 }
 
 // QueryEvents queries the "events" edge of the Player entity.

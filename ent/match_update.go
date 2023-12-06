@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"myf5/ent/event"
 	"myf5/ent/match"
-	"myf5/ent/player"
 	"myf5/ent/predicate"
+	"myf5/ent/team"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -44,17 +44,45 @@ func (mu *MatchUpdate) SetNillableDate(t *time.Time) *MatchUpdate {
 	return mu
 }
 
-// SetResult sets the "result" field.
-func (mu *MatchUpdate) SetResult(s string) *MatchUpdate {
-	mu.mutation.SetResult(s)
+// SetGoalsTeam1 sets the "goalsTeam1" field.
+func (mu *MatchUpdate) SetGoalsTeam1(i int) *MatchUpdate {
+	mu.mutation.ResetGoalsTeam1()
+	mu.mutation.SetGoalsTeam1(i)
 	return mu
 }
 
-// SetNillableResult sets the "result" field if the given value is not nil.
-func (mu *MatchUpdate) SetNillableResult(s *string) *MatchUpdate {
-	if s != nil {
-		mu.SetResult(*s)
+// SetNillableGoalsTeam1 sets the "goalsTeam1" field if the given value is not nil.
+func (mu *MatchUpdate) SetNillableGoalsTeam1(i *int) *MatchUpdate {
+	if i != nil {
+		mu.SetGoalsTeam1(*i)
 	}
+	return mu
+}
+
+// AddGoalsTeam1 adds i to the "goalsTeam1" field.
+func (mu *MatchUpdate) AddGoalsTeam1(i int) *MatchUpdate {
+	mu.mutation.AddGoalsTeam1(i)
+	return mu
+}
+
+// SetGoalsTeam2 sets the "goalsTeam2" field.
+func (mu *MatchUpdate) SetGoalsTeam2(i int) *MatchUpdate {
+	mu.mutation.ResetGoalsTeam2()
+	mu.mutation.SetGoalsTeam2(i)
+	return mu
+}
+
+// SetNillableGoalsTeam2 sets the "goalsTeam2" field if the given value is not nil.
+func (mu *MatchUpdate) SetNillableGoalsTeam2(i *int) *MatchUpdate {
+	if i != nil {
+		mu.SetGoalsTeam2(*i)
+	}
+	return mu
+}
+
+// AddGoalsTeam2 adds i to the "goalsTeam2" field.
+func (mu *MatchUpdate) AddGoalsTeam2(i int) *MatchUpdate {
+	mu.mutation.AddGoalsTeam2(i)
 	return mu
 }
 
@@ -73,19 +101,19 @@ func (mu *MatchUpdate) AddEvents(e ...*Event) *MatchUpdate {
 	return mu.AddEventIDs(ids...)
 }
 
-// AddPlayerIDs adds the "players" edge to the Player entity by IDs.
-func (mu *MatchUpdate) AddPlayerIDs(ids ...int) *MatchUpdate {
-	mu.mutation.AddPlayerIDs(ids...)
+// AddTeamIDs adds the "teams" edge to the Team entity by IDs.
+func (mu *MatchUpdate) AddTeamIDs(ids ...int) *MatchUpdate {
+	mu.mutation.AddTeamIDs(ids...)
 	return mu
 }
 
-// AddPlayers adds the "players" edges to the Player entity.
-func (mu *MatchUpdate) AddPlayers(p ...*Player) *MatchUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// AddTeams adds the "teams" edges to the Team entity.
+func (mu *MatchUpdate) AddTeams(t ...*Team) *MatchUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
 	}
-	return mu.AddPlayerIDs(ids...)
+	return mu.AddTeamIDs(ids...)
 }
 
 // Mutation returns the MatchMutation object of the builder.
@@ -114,25 +142,25 @@ func (mu *MatchUpdate) RemoveEvents(e ...*Event) *MatchUpdate {
 	return mu.RemoveEventIDs(ids...)
 }
 
-// ClearPlayers clears all "players" edges to the Player entity.
-func (mu *MatchUpdate) ClearPlayers() *MatchUpdate {
-	mu.mutation.ClearPlayers()
+// ClearTeams clears all "teams" edges to the Team entity.
+func (mu *MatchUpdate) ClearTeams() *MatchUpdate {
+	mu.mutation.ClearTeams()
 	return mu
 }
 
-// RemovePlayerIDs removes the "players" edge to Player entities by IDs.
-func (mu *MatchUpdate) RemovePlayerIDs(ids ...int) *MatchUpdate {
-	mu.mutation.RemovePlayerIDs(ids...)
+// RemoveTeamIDs removes the "teams" edge to Team entities by IDs.
+func (mu *MatchUpdate) RemoveTeamIDs(ids ...int) *MatchUpdate {
+	mu.mutation.RemoveTeamIDs(ids...)
 	return mu
 }
 
-// RemovePlayers removes "players" edges to Player entities.
-func (mu *MatchUpdate) RemovePlayers(p ...*Player) *MatchUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// RemoveTeams removes "teams" edges to Team entities.
+func (mu *MatchUpdate) RemoveTeams(t ...*Team) *MatchUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
 	}
-	return mu.RemovePlayerIDs(ids...)
+	return mu.RemoveTeamIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -174,8 +202,17 @@ func (mu *MatchUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := mu.mutation.Date(); ok {
 		_spec.SetField(match.FieldDate, field.TypeTime, value)
 	}
-	if value, ok := mu.mutation.Result(); ok {
-		_spec.SetField(match.FieldResult, field.TypeString, value)
+	if value, ok := mu.mutation.GoalsTeam1(); ok {
+		_spec.SetField(match.FieldGoalsTeam1, field.TypeInt, value)
+	}
+	if value, ok := mu.mutation.AddedGoalsTeam1(); ok {
+		_spec.AddField(match.FieldGoalsTeam1, field.TypeInt, value)
+	}
+	if value, ok := mu.mutation.GoalsTeam2(); ok {
+		_spec.SetField(match.FieldGoalsTeam2, field.TypeInt, value)
+	}
+	if value, ok := mu.mutation.AddedGoalsTeam2(); ok {
+		_spec.AddField(match.FieldGoalsTeam2, field.TypeInt, value)
 	}
 	if mu.mutation.EventsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -222,28 +259,28 @@ func (mu *MatchUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if mu.mutation.PlayersCleared() {
+	if mu.mutation.TeamsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   match.PlayersTable,
-			Columns: match.PlayersPrimaryKey,
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   match.TeamsTable,
+			Columns: []string{match.TeamsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(player.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(team.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := mu.mutation.RemovedPlayersIDs(); len(nodes) > 0 && !mu.mutation.PlayersCleared() {
+	if nodes := mu.mutation.RemovedTeamsIDs(); len(nodes) > 0 && !mu.mutation.TeamsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   match.PlayersTable,
-			Columns: match.PlayersPrimaryKey,
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   match.TeamsTable,
+			Columns: []string{match.TeamsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(player.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(team.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -251,15 +288,15 @@ func (mu *MatchUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := mu.mutation.PlayersIDs(); len(nodes) > 0 {
+	if nodes := mu.mutation.TeamsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   match.PlayersTable,
-			Columns: match.PlayersPrimaryKey,
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   match.TeamsTable,
+			Columns: []string{match.TeamsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(player.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(team.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -301,17 +338,45 @@ func (muo *MatchUpdateOne) SetNillableDate(t *time.Time) *MatchUpdateOne {
 	return muo
 }
 
-// SetResult sets the "result" field.
-func (muo *MatchUpdateOne) SetResult(s string) *MatchUpdateOne {
-	muo.mutation.SetResult(s)
+// SetGoalsTeam1 sets the "goalsTeam1" field.
+func (muo *MatchUpdateOne) SetGoalsTeam1(i int) *MatchUpdateOne {
+	muo.mutation.ResetGoalsTeam1()
+	muo.mutation.SetGoalsTeam1(i)
 	return muo
 }
 
-// SetNillableResult sets the "result" field if the given value is not nil.
-func (muo *MatchUpdateOne) SetNillableResult(s *string) *MatchUpdateOne {
-	if s != nil {
-		muo.SetResult(*s)
+// SetNillableGoalsTeam1 sets the "goalsTeam1" field if the given value is not nil.
+func (muo *MatchUpdateOne) SetNillableGoalsTeam1(i *int) *MatchUpdateOne {
+	if i != nil {
+		muo.SetGoalsTeam1(*i)
 	}
+	return muo
+}
+
+// AddGoalsTeam1 adds i to the "goalsTeam1" field.
+func (muo *MatchUpdateOne) AddGoalsTeam1(i int) *MatchUpdateOne {
+	muo.mutation.AddGoalsTeam1(i)
+	return muo
+}
+
+// SetGoalsTeam2 sets the "goalsTeam2" field.
+func (muo *MatchUpdateOne) SetGoalsTeam2(i int) *MatchUpdateOne {
+	muo.mutation.ResetGoalsTeam2()
+	muo.mutation.SetGoalsTeam2(i)
+	return muo
+}
+
+// SetNillableGoalsTeam2 sets the "goalsTeam2" field if the given value is not nil.
+func (muo *MatchUpdateOne) SetNillableGoalsTeam2(i *int) *MatchUpdateOne {
+	if i != nil {
+		muo.SetGoalsTeam2(*i)
+	}
+	return muo
+}
+
+// AddGoalsTeam2 adds i to the "goalsTeam2" field.
+func (muo *MatchUpdateOne) AddGoalsTeam2(i int) *MatchUpdateOne {
+	muo.mutation.AddGoalsTeam2(i)
 	return muo
 }
 
@@ -330,19 +395,19 @@ func (muo *MatchUpdateOne) AddEvents(e ...*Event) *MatchUpdateOne {
 	return muo.AddEventIDs(ids...)
 }
 
-// AddPlayerIDs adds the "players" edge to the Player entity by IDs.
-func (muo *MatchUpdateOne) AddPlayerIDs(ids ...int) *MatchUpdateOne {
-	muo.mutation.AddPlayerIDs(ids...)
+// AddTeamIDs adds the "teams" edge to the Team entity by IDs.
+func (muo *MatchUpdateOne) AddTeamIDs(ids ...int) *MatchUpdateOne {
+	muo.mutation.AddTeamIDs(ids...)
 	return muo
 }
 
-// AddPlayers adds the "players" edges to the Player entity.
-func (muo *MatchUpdateOne) AddPlayers(p ...*Player) *MatchUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// AddTeams adds the "teams" edges to the Team entity.
+func (muo *MatchUpdateOne) AddTeams(t ...*Team) *MatchUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
 	}
-	return muo.AddPlayerIDs(ids...)
+	return muo.AddTeamIDs(ids...)
 }
 
 // Mutation returns the MatchMutation object of the builder.
@@ -371,25 +436,25 @@ func (muo *MatchUpdateOne) RemoveEvents(e ...*Event) *MatchUpdateOne {
 	return muo.RemoveEventIDs(ids...)
 }
 
-// ClearPlayers clears all "players" edges to the Player entity.
-func (muo *MatchUpdateOne) ClearPlayers() *MatchUpdateOne {
-	muo.mutation.ClearPlayers()
+// ClearTeams clears all "teams" edges to the Team entity.
+func (muo *MatchUpdateOne) ClearTeams() *MatchUpdateOne {
+	muo.mutation.ClearTeams()
 	return muo
 }
 
-// RemovePlayerIDs removes the "players" edge to Player entities by IDs.
-func (muo *MatchUpdateOne) RemovePlayerIDs(ids ...int) *MatchUpdateOne {
-	muo.mutation.RemovePlayerIDs(ids...)
+// RemoveTeamIDs removes the "teams" edge to Team entities by IDs.
+func (muo *MatchUpdateOne) RemoveTeamIDs(ids ...int) *MatchUpdateOne {
+	muo.mutation.RemoveTeamIDs(ids...)
 	return muo
 }
 
-// RemovePlayers removes "players" edges to Player entities.
-func (muo *MatchUpdateOne) RemovePlayers(p ...*Player) *MatchUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// RemoveTeams removes "teams" edges to Team entities.
+func (muo *MatchUpdateOne) RemoveTeams(t ...*Team) *MatchUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
 	}
-	return muo.RemovePlayerIDs(ids...)
+	return muo.RemoveTeamIDs(ids...)
 }
 
 // Where appends a list predicates to the MatchUpdate builder.
@@ -461,8 +526,17 @@ func (muo *MatchUpdateOne) sqlSave(ctx context.Context) (_node *Match, err error
 	if value, ok := muo.mutation.Date(); ok {
 		_spec.SetField(match.FieldDate, field.TypeTime, value)
 	}
-	if value, ok := muo.mutation.Result(); ok {
-		_spec.SetField(match.FieldResult, field.TypeString, value)
+	if value, ok := muo.mutation.GoalsTeam1(); ok {
+		_spec.SetField(match.FieldGoalsTeam1, field.TypeInt, value)
+	}
+	if value, ok := muo.mutation.AddedGoalsTeam1(); ok {
+		_spec.AddField(match.FieldGoalsTeam1, field.TypeInt, value)
+	}
+	if value, ok := muo.mutation.GoalsTeam2(); ok {
+		_spec.SetField(match.FieldGoalsTeam2, field.TypeInt, value)
+	}
+	if value, ok := muo.mutation.AddedGoalsTeam2(); ok {
+		_spec.AddField(match.FieldGoalsTeam2, field.TypeInt, value)
 	}
 	if muo.mutation.EventsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -509,28 +583,28 @@ func (muo *MatchUpdateOne) sqlSave(ctx context.Context) (_node *Match, err error
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if muo.mutation.PlayersCleared() {
+	if muo.mutation.TeamsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   match.PlayersTable,
-			Columns: match.PlayersPrimaryKey,
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   match.TeamsTable,
+			Columns: []string{match.TeamsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(player.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(team.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := muo.mutation.RemovedPlayersIDs(); len(nodes) > 0 && !muo.mutation.PlayersCleared() {
+	if nodes := muo.mutation.RemovedTeamsIDs(); len(nodes) > 0 && !muo.mutation.TeamsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   match.PlayersTable,
-			Columns: match.PlayersPrimaryKey,
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   match.TeamsTable,
+			Columns: []string{match.TeamsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(player.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(team.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -538,15 +612,15 @@ func (muo *MatchUpdateOne) sqlSave(ctx context.Context) (_node *Match, err error
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := muo.mutation.PlayersIDs(); len(nodes) > 0 {
+	if nodes := muo.mutation.TeamsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   match.PlayersTable,
-			Columns: match.PlayersPrimaryKey,
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   match.TeamsTable,
+			Columns: []string{match.TeamsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(player.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(team.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -15,7 +15,8 @@ type Match struct {
 func (Match) Fields() []ent.Field {
 	return []ent.Field{
 		field.Time("date"),
-		field.String("result"),
+		field.Int("goalsTeam1"),
+		field.Int("goalsTeam2"),
 	}
 }
 
@@ -23,6 +24,6 @@ func (Match) Fields() []ent.Field {
 func (Match) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("events", Event.Type),
-		edge.From("players", Player.Type).Ref("matches"),
+		edge.To("teams", Team.Type),
 	}
 }

@@ -18,6 +18,8 @@ type Tx struct {
 	Match *MatchClient
 	// Player is the client for interacting with the Player builders.
 	Player *PlayerClient
+	// Team is the client for interacting with the Team builders.
+	Team *TeamClient
 
 	// lazily loaded.
 	client     *Client
@@ -152,6 +154,7 @@ func (tx *Tx) init() {
 	tx.Event = NewEventClient(tx.config)
 	tx.Match = NewMatchClient(tx.config)
 	tx.Player = NewPlayerClient(tx.config)
+	tx.Team = NewTeamClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

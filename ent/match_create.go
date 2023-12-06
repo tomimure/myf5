@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"myf5/ent/event"
 	"myf5/ent/match"
-	"myf5/ent/player"
+	"myf5/ent/team"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -28,9 +28,15 @@ func (mc *MatchCreate) SetDate(t time.Time) *MatchCreate {
 	return mc
 }
 
-// SetResult sets the "result" field.
-func (mc *MatchCreate) SetResult(s string) *MatchCreate {
-	mc.mutation.SetResult(s)
+// SetGoalsTeam1 sets the "goalsTeam1" field.
+func (mc *MatchCreate) SetGoalsTeam1(i int) *MatchCreate {
+	mc.mutation.SetGoalsTeam1(i)
+	return mc
+}
+
+// SetGoalsTeam2 sets the "goalsTeam2" field.
+func (mc *MatchCreate) SetGoalsTeam2(i int) *MatchCreate {
+	mc.mutation.SetGoalsTeam2(i)
 	return mc
 }
 
@@ -49,19 +55,19 @@ func (mc *MatchCreate) AddEvents(e ...*Event) *MatchCreate {
 	return mc.AddEventIDs(ids...)
 }
 
-// AddPlayerIDs adds the "players" edge to the Player entity by IDs.
-func (mc *MatchCreate) AddPlayerIDs(ids ...int) *MatchCreate {
-	mc.mutation.AddPlayerIDs(ids...)
+// AddTeamIDs adds the "teams" edge to the Team entity by IDs.
+func (mc *MatchCreate) AddTeamIDs(ids ...int) *MatchCreate {
+	mc.mutation.AddTeamIDs(ids...)
 	return mc
 }
 
-// AddPlayers adds the "players" edges to the Player entity.
-func (mc *MatchCreate) AddPlayers(p ...*Player) *MatchCreate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// AddTeams adds the "teams" edges to the Team entity.
+func (mc *MatchCreate) AddTeams(t ...*Team) *MatchCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
 	}
-	return mc.AddPlayerIDs(ids...)
+	return mc.AddTeamIDs(ids...)
 }
 
 // Mutation returns the MatchMutation object of the builder.
@@ -101,8 +107,11 @@ func (mc *MatchCreate) check() error {
 	if _, ok := mc.mutation.Date(); !ok {
 		return &ValidationError{Name: "date", err: errors.New(`ent: missing required field "Match.date"`)}
 	}
-	if _, ok := mc.mutation.Result(); !ok {
-		return &ValidationError{Name: "result", err: errors.New(`ent: missing required field "Match.result"`)}
+	if _, ok := mc.mutation.GoalsTeam1(); !ok {
+		return &ValidationError{Name: "goalsTeam1", err: errors.New(`ent: missing required field "Match.goalsTeam1"`)}
+	}
+	if _, ok := mc.mutation.GoalsTeam2(); !ok {
+		return &ValidationError{Name: "goalsTeam2", err: errors.New(`ent: missing required field "Match.goalsTeam2"`)}
 	}
 	return nil
 }
@@ -134,9 +143,13 @@ func (mc *MatchCreate) createSpec() (*Match, *sqlgraph.CreateSpec) {
 		_spec.SetField(match.FieldDate, field.TypeTime, value)
 		_node.Date = value
 	}
-	if value, ok := mc.mutation.Result(); ok {
-		_spec.SetField(match.FieldResult, field.TypeString, value)
-		_node.Result = value
+	if value, ok := mc.mutation.GoalsTeam1(); ok {
+		_spec.SetField(match.FieldGoalsTeam1, field.TypeInt, value)
+		_node.GoalsTeam1 = value
+	}
+	if value, ok := mc.mutation.GoalsTeam2(); ok {
+		_spec.SetField(match.FieldGoalsTeam2, field.TypeInt, value)
+		_node.GoalsTeam2 = value
 	}
 	if nodes := mc.mutation.EventsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -154,15 +167,15 @@ func (mc *MatchCreate) createSpec() (*Match, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := mc.mutation.PlayersIDs(); len(nodes) > 0 {
+	if nodes := mc.mutation.TeamsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   match.PlayersTable,
-			Columns: match.PlayersPrimaryKey,
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   match.TeamsTable,
+			Columns: []string{match.TeamsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(player.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(team.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

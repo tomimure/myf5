@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"math"
 	"myf5/ent/event"
-	"myf5/ent/match"
 	"myf5/ent/player"
 	"myf5/ent/predicate"
+	"myf5/ent/team"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -20,12 +20,12 @@ import (
 // PlayerQuery is the builder for querying Player entities.
 type PlayerQuery struct {
 	config
-	ctx         *QueryContext
-	order       []player.OrderOption
-	inters      []Interceptor
-	predicates  []predicate.Player
-	withMatches *MatchQuery
-	withEvents  *EventQuery
+	ctx        *QueryContext
+	order      []player.OrderOption
+	inters     []Interceptor
+	predicates []predicate.Player
+	withTeams  *TeamQuery
+	withEvents *EventQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -62,9 +62,9 @@ func (pq *PlayerQuery) Order(o ...player.OrderOption) *PlayerQuery {
 	return pq
 }
 
-// QueryMatches chains the current query on the "matches" edge.
-func (pq *PlayerQuery) QueryMatches() *MatchQuery {
-	query := (&MatchClient{config: pq.config}).Query()
+// QueryTeams chains the current query on the "teams" edge.
+func (pq *PlayerQuery) QueryTeams() *TeamQuery {
+	query := (&TeamClient{config: pq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := pq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -75,8 +75,8 @@ func (pq *PlayerQuery) QueryMatches() *MatchQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(player.Table, player.FieldID, selector),
-			sqlgraph.To(match.Table, match.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, player.MatchesTable, player.MatchesPrimaryKey...),
+			sqlgraph.To(team.Table, team.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, player.TeamsTable, player.TeamsPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
 		return fromU, nil
@@ -293,27 +293,27 @@ func (pq *PlayerQuery) Clone() *PlayerQuery {
 		return nil
 	}
 	return &PlayerQuery{
-		config:      pq.config,
-		ctx:         pq.ctx.Clone(),
-		order:       append([]player.OrderOption{}, pq.order...),
-		inters:      append([]Interceptor{}, pq.inters...),
-		predicates:  append([]predicate.Player{}, pq.predicates...),
-		withMatches: pq.withMatches.Clone(),
-		withEvents:  pq.withEvents.Clone(),
+		config:     pq.config,
+		ctx:        pq.ctx.Clone(),
+		order:      append([]player.OrderOption{}, pq.order...),
+		inters:     append([]Interceptor{}, pq.inters...),
+		predicates: append([]predicate.Player{}, pq.predicates...),
+		withTeams:  pq.withTeams.Clone(),
+		withEvents: pq.withEvents.Clone(),
 		// clone intermediate query.
 		sql:  pq.sql.Clone(),
 		path: pq.path,
 	}
 }
 
-// WithMatches tells the query-builder to eager-load the nodes that are connected to
-// the "matches" edge. The optional arguments are used to configure the query builder of the edge.
-func (pq *PlayerQuery) WithMatches(opts ...func(*MatchQuery)) *PlayerQuery {
-	query := (&MatchClient{config: pq.config}).Query()
+// WithTeams tells the query-builder to eager-load the nodes that are connected to
+// the "teams" edge. The optional arguments are used to configure the query builder of the edge.
+func (pq *PlayerQuery) WithTeams(opts ...func(*TeamQuery)) *PlayerQuery {
+	query := (&TeamClient{config: pq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	pq.withMatches = query
+	pq.withTeams = query
 	return pq
 }
 
@@ -407,7 +407,7 @@ func (pq *PlayerQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Playe
 		nodes       = []*Player{}
 		_spec       = pq.querySpec()
 		loadedTypes = [2]bool{
-			pq.withMatches != nil,
+			pq.withTeams != nil,
 			pq.withEvents != nil,
 		}
 	)
@@ -429,10 +429,10 @@ func (pq *PlayerQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Playe
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := pq.withMatches; query != nil {
-		if err := pq.loadMatches(ctx, query, nodes,
-			func(n *Player) { n.Edges.Matches = []*Match{} },
-			func(n *Player, e *Match) { n.Edges.Matches = append(n.Edges.Matches, e) }); err != nil {
+	if query := pq.withTeams; query != nil {
+		if err := pq.loadTeams(ctx, query, nodes,
+			func(n *Player) { n.Edges.Teams = []*Team{} },
+			func(n *Player, e *Team) { n.Edges.Teams = append(n.Edges.Teams, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -446,7 +446,7 @@ func (pq *PlayerQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Playe
 	return nodes, nil
 }
 
-func (pq *PlayerQuery) loadMatches(ctx context.Context, query *MatchQuery, nodes []*Player, init func(*Player), assign func(*Player, *Match)) error {
+func (pq *PlayerQuery) loadTeams(ctx context.Context, query *TeamQuery, nodes []*Player, init func(*Player), assign func(*Player, *Team)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
 	byID := make(map[int]*Player)
 	nids := make(map[int]map[*Player]struct{})
@@ -458,11 +458,11 @@ func (pq *PlayerQuery) loadMatches(ctx context.Context, query *MatchQuery, nodes
 		}
 	}
 	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(player.MatchesTable)
-		s.Join(joinT).On(s.C(match.FieldID), joinT.C(player.MatchesPrimaryKey[1]))
-		s.Where(sql.InValues(joinT.C(player.MatchesPrimaryKey[0]), edgeIDs...))
+		joinT := sql.Table(player.TeamsTable)
+		s.Join(joinT).On(s.C(team.FieldID), joinT.C(player.TeamsPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(player.TeamsPrimaryKey[1]), edgeIDs...))
 		columns := s.SelectedColumns()
-		s.Select(joinT.C(player.MatchesPrimaryKey[0]))
+		s.Select(joinT.C(player.TeamsPrimaryKey[1]))
 		s.AppendSelect(columns...)
 		s.SetDistinct(false)
 	})
@@ -492,14 +492,14 @@ func (pq *PlayerQuery) loadMatches(ctx context.Context, query *MatchQuery, nodes
 			}
 		})
 	})
-	neighbors, err := withInterceptors[[]*Match](ctx, query, qr, query.inters)
+	neighbors, err := withInterceptors[[]*Team](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
 		nodes, ok := nids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected "matches" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected "teams" node returned %v`, n.ID)
 		}
 		for kn := range nodes {
 			assign(kn, n)

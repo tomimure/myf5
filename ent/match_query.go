@@ -9,8 +9,8 @@ import (
 	"math"
 	"myf5/ent/event"
 	"myf5/ent/match"
-	"myf5/ent/player"
 	"myf5/ent/predicate"
+	"myf5/ent/team"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -20,12 +20,12 @@ import (
 // MatchQuery is the builder for querying Match entities.
 type MatchQuery struct {
 	config
-	ctx         *QueryContext
-	order       []match.OrderOption
-	inters      []Interceptor
-	predicates  []predicate.Match
-	withEvents  *EventQuery
-	withPlayers *PlayerQuery
+	ctx        *QueryContext
+	order      []match.OrderOption
+	inters     []Interceptor
+	predicates []predicate.Match
+	withEvents *EventQuery
+	withTeams  *TeamQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -84,9 +84,9 @@ func (mq *MatchQuery) QueryEvents() *EventQuery {
 	return query
 }
 
-// QueryPlayers chains the current query on the "players" edge.
-func (mq *MatchQuery) QueryPlayers() *PlayerQuery {
-	query := (&PlayerClient{config: mq.config}).Query()
+// QueryTeams chains the current query on the "teams" edge.
+func (mq *MatchQuery) QueryTeams() *TeamQuery {
+	query := (&TeamClient{config: mq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := mq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -97,8 +97,8 @@ func (mq *MatchQuery) QueryPlayers() *PlayerQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(match.Table, match.FieldID, selector),
-			sqlgraph.To(player.Table, player.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, match.PlayersTable, match.PlayersPrimaryKey...),
+			sqlgraph.To(team.Table, team.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, match.TeamsTable, match.TeamsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(mq.driver.Dialect(), step)
 		return fromU, nil
@@ -293,13 +293,13 @@ func (mq *MatchQuery) Clone() *MatchQuery {
 		return nil
 	}
 	return &MatchQuery{
-		config:      mq.config,
-		ctx:         mq.ctx.Clone(),
-		order:       append([]match.OrderOption{}, mq.order...),
-		inters:      append([]Interceptor{}, mq.inters...),
-		predicates:  append([]predicate.Match{}, mq.predicates...),
-		withEvents:  mq.withEvents.Clone(),
-		withPlayers: mq.withPlayers.Clone(),
+		config:     mq.config,
+		ctx:        mq.ctx.Clone(),
+		order:      append([]match.OrderOption{}, mq.order...),
+		inters:     append([]Interceptor{}, mq.inters...),
+		predicates: append([]predicate.Match{}, mq.predicates...),
+		withEvents: mq.withEvents.Clone(),
+		withTeams:  mq.withTeams.Clone(),
 		// clone intermediate query.
 		sql:  mq.sql.Clone(),
 		path: mq.path,
@@ -317,14 +317,14 @@ func (mq *MatchQuery) WithEvents(opts ...func(*EventQuery)) *MatchQuery {
 	return mq
 }
 
-// WithPlayers tells the query-builder to eager-load the nodes that are connected to
-// the "players" edge. The optional arguments are used to configure the query builder of the edge.
-func (mq *MatchQuery) WithPlayers(opts ...func(*PlayerQuery)) *MatchQuery {
-	query := (&PlayerClient{config: mq.config}).Query()
+// WithTeams tells the query-builder to eager-load the nodes that are connected to
+// the "teams" edge. The optional arguments are used to configure the query builder of the edge.
+func (mq *MatchQuery) WithTeams(opts ...func(*TeamQuery)) *MatchQuery {
+	query := (&TeamClient{config: mq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	mq.withPlayers = query
+	mq.withTeams = query
 	return mq
 }
 
@@ -408,7 +408,7 @@ func (mq *MatchQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Match,
 		_spec       = mq.querySpec()
 		loadedTypes = [2]bool{
 			mq.withEvents != nil,
-			mq.withPlayers != nil,
+			mq.withTeams != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -436,10 +436,10 @@ func (mq *MatchQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Match,
 			return nil, err
 		}
 	}
-	if query := mq.withPlayers; query != nil {
-		if err := mq.loadPlayers(ctx, query, nodes,
-			func(n *Match) { n.Edges.Players = []*Player{} },
-			func(n *Match, e *Player) { n.Edges.Players = append(n.Edges.Players, e) }); err != nil {
+	if query := mq.withTeams; query != nil {
+		if err := mq.loadTeams(ctx, query, nodes,
+			func(n *Match) { n.Edges.Teams = []*Team{} },
+			func(n *Match, e *Team) { n.Edges.Teams = append(n.Edges.Teams, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -477,64 +477,33 @@ func (mq *MatchQuery) loadEvents(ctx context.Context, query *EventQuery, nodes [
 	}
 	return nil
 }
-func (mq *MatchQuery) loadPlayers(ctx context.Context, query *PlayerQuery, nodes []*Match, init func(*Match), assign func(*Match, *Player)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Match)
-	nids := make(map[int]map[*Match]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
+func (mq *MatchQuery) loadTeams(ctx context.Context, query *TeamQuery, nodes []*Match, init func(*Match), assign func(*Match, *Team)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Match)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
 		if init != nil {
-			init(node)
+			init(nodes[i])
 		}
 	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(match.PlayersTable)
-		s.Join(joinT).On(s.C(player.FieldID), joinT.C(match.PlayersPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(match.PlayersPrimaryKey[1]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(match.PlayersPrimaryKey[1]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(team.FieldMatchID)
 	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Match]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Player](ctx, query, qr, query.inters)
+	query.Where(predicate.Team(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(match.TeamsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
+		fk := n.MatchID
+		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected "players" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "match_id" returned %v for node %v`, fk, n.ID)
 		}
-		for kn := range nodes {
-			assign(kn, n)
-		}
+		assign(node, n)
 	}
 	return nil
 }

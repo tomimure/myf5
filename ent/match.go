@@ -19,8 +19,10 @@ type Match struct {
 	ID int `json:"id,omitempty"`
 	// Date holds the value of the "date" field.
 	Date time.Time `json:"date,omitempty"`
-	// Result holds the value of the "result" field.
-	Result string `json:"result,omitempty"`
+	// GoalsTeam1 holds the value of the "goalsTeam1" field.
+	GoalsTeam1 int `json:"goalsTeam1,omitempty"`
+	// GoalsTeam2 holds the value of the "goalsTeam2" field.
+	GoalsTeam2 int `json:"goalsTeam2,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the MatchQuery when eager-loading is set.
 	Edges        MatchEdges `json:"edges"`
@@ -31,8 +33,8 @@ type Match struct {
 type MatchEdges struct {
 	// Events holds the value of the events edge.
 	Events []*Event `json:"events,omitempty"`
-	// Players holds the value of the players edge.
-	Players []*Player `json:"players,omitempty"`
+	// Teams holds the value of the teams edge.
+	Teams []*Team `json:"teams,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [2]bool
@@ -47,13 +49,13 @@ func (e MatchEdges) EventsOrErr() ([]*Event, error) {
 	return nil, &NotLoadedError{edge: "events"}
 }
 
-// PlayersOrErr returns the Players value or an error if the edge
+// TeamsOrErr returns the Teams value or an error if the edge
 // was not loaded in eager-loading.
-func (e MatchEdges) PlayersOrErr() ([]*Player, error) {
+func (e MatchEdges) TeamsOrErr() ([]*Team, error) {
 	if e.loadedTypes[1] {
-		return e.Players, nil
+		return e.Teams, nil
 	}
-	return nil, &NotLoadedError{edge: "players"}
+	return nil, &NotLoadedError{edge: "teams"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -61,10 +63,8 @@ func (*Match) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case match.FieldID:
+		case match.FieldID, match.FieldGoalsTeam1, match.FieldGoalsTeam2:
 			values[i] = new(sql.NullInt64)
-		case match.FieldResult:
-			values[i] = new(sql.NullString)
 		case match.FieldDate:
 			values[i] = new(sql.NullTime)
 		default:
@@ -94,11 +94,17 @@ func (m *Match) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				m.Date = value.Time
 			}
-		case match.FieldResult:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field result", values[i])
+		case match.FieldGoalsTeam1:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field goalsTeam1", values[i])
 			} else if value.Valid {
-				m.Result = value.String
+				m.GoalsTeam1 = int(value.Int64)
+			}
+		case match.FieldGoalsTeam2:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field goalsTeam2", values[i])
+			} else if value.Valid {
+				m.GoalsTeam2 = int(value.Int64)
 			}
 		default:
 			m.selectValues.Set(columns[i], values[i])
@@ -118,9 +124,9 @@ func (m *Match) QueryEvents() *EventQuery {
 	return NewMatchClient(m.config).QueryEvents(m)
 }
 
-// QueryPlayers queries the "players" edge of the Match entity.
-func (m *Match) QueryPlayers() *PlayerQuery {
-	return NewMatchClient(m.config).QueryPlayers(m)
+// QueryTeams queries the "teams" edge of the Match entity.
+func (m *Match) QueryTeams() *TeamQuery {
+	return NewMatchClient(m.config).QueryTeams(m)
 }
 
 // Update returns a builder for updating this Match.
@@ -149,8 +155,11 @@ func (m *Match) String() string {
 	builder.WriteString("date=")
 	builder.WriteString(m.Date.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("result=")
-	builder.WriteString(m.Result)
+	builder.WriteString("goalsTeam1=")
+	builder.WriteString(fmt.Sprintf("%v", m.GoalsTeam1))
+	builder.WriteString(", ")
+	builder.WriteString("goalsTeam2=")
+	builder.WriteString(fmt.Sprintf("%v", m.GoalsTeam2))
 	builder.WriteByte(')')
 	return builder.String()
 }

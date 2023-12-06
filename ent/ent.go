@@ -9,6 +9,7 @@ import (
 	"myf5/ent/event"
 	"myf5/ent/match"
 	"myf5/ent/player"
+	"myf5/ent/team"
 	"reflect"
 	"sync"
 
@@ -78,6 +79,7 @@ func checkColumn(table, column string) error {
 			event.Table:  event.ValidColumn,
 			match.Table:  match.ValidColumn,
 			player.Table: player.ValidColumn,
+			team.Table:   team.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

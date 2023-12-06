@@ -60,9 +60,14 @@ func Date(v time.Time) predicate.Match {
 	return predicate.Match(sql.FieldEQ(FieldDate, v))
 }
 
-// Result applies equality check predicate on the "result" field. It's identical to ResultEQ.
-func Result(v string) predicate.Match {
-	return predicate.Match(sql.FieldEQ(FieldResult, v))
+// GoalsTeam1 applies equality check predicate on the "goalsTeam1" field. It's identical to GoalsTeam1EQ.
+func GoalsTeam1(v int) predicate.Match {
+	return predicate.Match(sql.FieldEQ(FieldGoalsTeam1, v))
+}
+
+// GoalsTeam2 applies equality check predicate on the "goalsTeam2" field. It's identical to GoalsTeam2EQ.
+func GoalsTeam2(v int) predicate.Match {
+	return predicate.Match(sql.FieldEQ(FieldGoalsTeam2, v))
 }
 
 // DateEQ applies the EQ predicate on the "date" field.
@@ -105,69 +110,84 @@ func DateLTE(v time.Time) predicate.Match {
 	return predicate.Match(sql.FieldLTE(FieldDate, v))
 }
 
-// ResultEQ applies the EQ predicate on the "result" field.
-func ResultEQ(v string) predicate.Match {
-	return predicate.Match(sql.FieldEQ(FieldResult, v))
+// GoalsTeam1EQ applies the EQ predicate on the "goalsTeam1" field.
+func GoalsTeam1EQ(v int) predicate.Match {
+	return predicate.Match(sql.FieldEQ(FieldGoalsTeam1, v))
 }
 
-// ResultNEQ applies the NEQ predicate on the "result" field.
-func ResultNEQ(v string) predicate.Match {
-	return predicate.Match(sql.FieldNEQ(FieldResult, v))
+// GoalsTeam1NEQ applies the NEQ predicate on the "goalsTeam1" field.
+func GoalsTeam1NEQ(v int) predicate.Match {
+	return predicate.Match(sql.FieldNEQ(FieldGoalsTeam1, v))
 }
 
-// ResultIn applies the In predicate on the "result" field.
-func ResultIn(vs ...string) predicate.Match {
-	return predicate.Match(sql.FieldIn(FieldResult, vs...))
+// GoalsTeam1In applies the In predicate on the "goalsTeam1" field.
+func GoalsTeam1In(vs ...int) predicate.Match {
+	return predicate.Match(sql.FieldIn(FieldGoalsTeam1, vs...))
 }
 
-// ResultNotIn applies the NotIn predicate on the "result" field.
-func ResultNotIn(vs ...string) predicate.Match {
-	return predicate.Match(sql.FieldNotIn(FieldResult, vs...))
+// GoalsTeam1NotIn applies the NotIn predicate on the "goalsTeam1" field.
+func GoalsTeam1NotIn(vs ...int) predicate.Match {
+	return predicate.Match(sql.FieldNotIn(FieldGoalsTeam1, vs...))
 }
 
-// ResultGT applies the GT predicate on the "result" field.
-func ResultGT(v string) predicate.Match {
-	return predicate.Match(sql.FieldGT(FieldResult, v))
+// GoalsTeam1GT applies the GT predicate on the "goalsTeam1" field.
+func GoalsTeam1GT(v int) predicate.Match {
+	return predicate.Match(sql.FieldGT(FieldGoalsTeam1, v))
 }
 
-// ResultGTE applies the GTE predicate on the "result" field.
-func ResultGTE(v string) predicate.Match {
-	return predicate.Match(sql.FieldGTE(FieldResult, v))
+// GoalsTeam1GTE applies the GTE predicate on the "goalsTeam1" field.
+func GoalsTeam1GTE(v int) predicate.Match {
+	return predicate.Match(sql.FieldGTE(FieldGoalsTeam1, v))
 }
 
-// ResultLT applies the LT predicate on the "result" field.
-func ResultLT(v string) predicate.Match {
-	return predicate.Match(sql.FieldLT(FieldResult, v))
+// GoalsTeam1LT applies the LT predicate on the "goalsTeam1" field.
+func GoalsTeam1LT(v int) predicate.Match {
+	return predicate.Match(sql.FieldLT(FieldGoalsTeam1, v))
 }
 
-// ResultLTE applies the LTE predicate on the "result" field.
-func ResultLTE(v string) predicate.Match {
-	return predicate.Match(sql.FieldLTE(FieldResult, v))
+// GoalsTeam1LTE applies the LTE predicate on the "goalsTeam1" field.
+func GoalsTeam1LTE(v int) predicate.Match {
+	return predicate.Match(sql.FieldLTE(FieldGoalsTeam1, v))
 }
 
-// ResultContains applies the Contains predicate on the "result" field.
-func ResultContains(v string) predicate.Match {
-	return predicate.Match(sql.FieldContains(FieldResult, v))
+// GoalsTeam2EQ applies the EQ predicate on the "goalsTeam2" field.
+func GoalsTeam2EQ(v int) predicate.Match {
+	return predicate.Match(sql.FieldEQ(FieldGoalsTeam2, v))
 }
 
-// ResultHasPrefix applies the HasPrefix predicate on the "result" field.
-func ResultHasPrefix(v string) predicate.Match {
-	return predicate.Match(sql.FieldHasPrefix(FieldResult, v))
+// GoalsTeam2NEQ applies the NEQ predicate on the "goalsTeam2" field.
+func GoalsTeam2NEQ(v int) predicate.Match {
+	return predicate.Match(sql.FieldNEQ(FieldGoalsTeam2, v))
 }
 
-// ResultHasSuffix applies the HasSuffix predicate on the "result" field.
-func ResultHasSuffix(v string) predicate.Match {
-	return predicate.Match(sql.FieldHasSuffix(FieldResult, v))
+// GoalsTeam2In applies the In predicate on the "goalsTeam2" field.
+func GoalsTeam2In(vs ...int) predicate.Match {
+	return predicate.Match(sql.FieldIn(FieldGoalsTeam2, vs...))
 }
 
-// ResultEqualFold applies the EqualFold predicate on the "result" field.
-func ResultEqualFold(v string) predicate.Match {
-	return predicate.Match(sql.FieldEqualFold(FieldResult, v))
+// GoalsTeam2NotIn applies the NotIn predicate on the "goalsTeam2" field.
+func GoalsTeam2NotIn(vs ...int) predicate.Match {
+	return predicate.Match(sql.FieldNotIn(FieldGoalsTeam2, vs...))
 }
 
-// ResultContainsFold applies the ContainsFold predicate on the "result" field.
-func ResultContainsFold(v string) predicate.Match {
-	return predicate.Match(sql.FieldContainsFold(FieldResult, v))
+// GoalsTeam2GT applies the GT predicate on the "goalsTeam2" field.
+func GoalsTeam2GT(v int) predicate.Match {
+	return predicate.Match(sql.FieldGT(FieldGoalsTeam2, v))
+}
+
+// GoalsTeam2GTE applies the GTE predicate on the "goalsTeam2" field.
+func GoalsTeam2GTE(v int) predicate.Match {
+	return predicate.Match(sql.FieldGTE(FieldGoalsTeam2, v))
+}
+
+// GoalsTeam2LT applies the LT predicate on the "goalsTeam2" field.
+func GoalsTeam2LT(v int) predicate.Match {
+	return predicate.Match(sql.FieldLT(FieldGoalsTeam2, v))
+}
+
+// GoalsTeam2LTE applies the LTE predicate on the "goalsTeam2" field.
+func GoalsTeam2LTE(v int) predicate.Match {
+	return predicate.Match(sql.FieldLTE(FieldGoalsTeam2, v))
 }
 
 // HasEvents applies the HasEdge predicate on the "events" edge.
@@ -193,21 +213,21 @@ func HasEventsWith(preds ...predicate.Event) predicate.Match {
 	})
 }
 
-// HasPlayers applies the HasEdge predicate on the "players" edge.
-func HasPlayers() predicate.Match {
+// HasTeams applies the HasEdge predicate on the "teams" edge.
+func HasTeams() predicate.Match {
 	return predicate.Match(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, PlayersTable, PlayersPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, TeamsTable, TeamsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasPlayersWith applies the HasEdge predicate on the "players" edge with a given conditions (other predicates).
-func HasPlayersWith(preds ...predicate.Player) predicate.Match {
+// HasTeamsWith applies the HasEdge predicate on the "teams" edge with a given conditions (other predicates).
+func HasTeamsWith(preds ...predicate.Team) predicate.Match {
 	return predicate.Match(func(s *sql.Selector) {
-		step := newPlayersStep()
+		step := newTeamsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

@@ -22,7 +22,7 @@ func (Player) Fields() []ent.Field {
 // Edges of the Player.
 func (Player) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("matches", Match.Type),
+		edge.From("teams", Team.Type).Ref("players"),
 		edge.To("events", Event.Type),
 	}
 }

@@ -14,3 +14,6 @@ type Match func(*sql.Selector)
 
 // Player is the predicate function for player builders.
 type Player func(*sql.Selector)
+
+// Team is the predicate function for team builders.
+type Team func(*sql.Selector)

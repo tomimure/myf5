@@ -14,12 +14,14 @@ const (
 	FieldID = "id"
 	// FieldDate holds the string denoting the date field in the database.
 	FieldDate = "date"
-	// FieldResult holds the string denoting the result field in the database.
-	FieldResult = "result"
+	// FieldGoalsTeam1 holds the string denoting the goalsteam1 field in the database.
+	FieldGoalsTeam1 = "goals_team1"
+	// FieldGoalsTeam2 holds the string denoting the goalsteam2 field in the database.
+	FieldGoalsTeam2 = "goals_team2"
 	// EdgeEvents holds the string denoting the events edge name in mutations.
 	EdgeEvents = "events"
-	// EdgePlayers holds the string denoting the players edge name in mutations.
-	EdgePlayers = "players"
+	// EdgeTeams holds the string denoting the teams edge name in mutations.
+	EdgeTeams = "teams"
 	// Table holds the table name of the match in the database.
 	Table = "matches"
 	// EventsTable is the table that holds the events relation/edge.
@@ -29,25 +31,22 @@ const (
 	EventsInverseTable = "events"
 	// EventsColumn is the table column denoting the events relation/edge.
 	EventsColumn = "match_events"
-	// PlayersTable is the table that holds the players relation/edge. The primary key declared below.
-	PlayersTable = "player_matches"
-	// PlayersInverseTable is the table name for the Player entity.
-	// It exists in this package in order to avoid circular dependency with the "player" package.
-	PlayersInverseTable = "players"
+	// TeamsTable is the table that holds the teams relation/edge.
+	TeamsTable = "teams"
+	// TeamsInverseTable is the table name for the Team entity.
+	// It exists in this package in order to avoid circular dependency with the "team" package.
+	TeamsInverseTable = "teams"
+	// TeamsColumn is the table column denoting the teams relation/edge.
+	TeamsColumn = "match_id"
 )
 
 // Columns holds all SQL columns for match fields.
 var Columns = []string{
 	FieldID,
 	FieldDate,
-	FieldResult,
+	FieldGoalsTeam1,
+	FieldGoalsTeam2,
 }
-
-var (
-	// PlayersPrimaryKey and PlayersColumn2 are the table columns denoting the
-	// primary key for the players relation (M2M).
-	PlayersPrimaryKey = []string{"player_id", "match_id"}
-)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -72,9 +71,14 @@ func ByDate(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDate, opts...).ToFunc()
 }
 
-// ByResult orders the results by the result field.
-func ByResult(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldResult, opts...).ToFunc()
+// ByGoalsTeam1 orders the results by the goalsTeam1 field.
+func ByGoalsTeam1(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldGoalsTeam1, opts...).ToFunc()
+}
+
+// ByGoalsTeam2 orders the results by the goalsTeam2 field.
+func ByGoalsTeam2(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldGoalsTeam2, opts...).ToFunc()
 }
 
 // ByEventsCount orders the results by events count.
@@ -91,17 +95,17 @@ func ByEvents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByPlayersCount orders the results by players count.
-func ByPlayersCount(opts ...sql.OrderTermOption) OrderOption {
+// ByTeamsCount orders the results by teams count.
+func ByTeamsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newPlayersStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newTeamsStep(), opts...)
 	}
 }
 
-// ByPlayers orders the results by players terms.
-func ByPlayers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByTeams orders the results by teams terms.
+func ByTeams(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newPlayersStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newTeamsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 func newEventsStep() *sqlgraph.Step {
@@ -111,10 +115,10 @@ func newEventsStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.O2M, false, EventsTable, EventsColumn),
 	)
 }
-func newPlayersStep() *sqlgraph.Step {
+func newTeamsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(PlayersInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, PlayersTable, PlayersPrimaryKey...),
+		sqlgraph.To(TeamsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TeamsTable, TeamsColumn),
 	)
 }

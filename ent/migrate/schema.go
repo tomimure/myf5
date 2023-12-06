@@ -39,7 +39,8 @@ var (
 	MatchesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "date", Type: field.TypeTime},
-		{Name: "result", Type: field.TypeString},
+		{Name: "goals_team1", Type: field.TypeInt},
+		{Name: "goals_team2", Type: field.TypeInt},
 	}
 	// MatchesTable holds the schema information for the "matches" table.
 	MatchesTable = &schema.Table{
@@ -59,27 +60,47 @@ var (
 		Columns:    PlayersColumns,
 		PrimaryKey: []*schema.Column{PlayersColumns[0]},
 	}
-	// PlayerMatchesColumns holds the columns for the "player_matches" table.
-	PlayerMatchesColumns = []*schema.Column{
-		{Name: "player_id", Type: field.TypeInt},
+	// TeamsColumns holds the columns for the "teams" table.
+	TeamsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "team", Type: field.TypeEnum, Enums: []string{"1", "2"}},
 		{Name: "match_id", Type: field.TypeInt},
 	}
-	// PlayerMatchesTable holds the schema information for the "player_matches" table.
-	PlayerMatchesTable = &schema.Table{
-		Name:       "player_matches",
-		Columns:    PlayerMatchesColumns,
-		PrimaryKey: []*schema.Column{PlayerMatchesColumns[0], PlayerMatchesColumns[1]},
+	// TeamsTable holds the schema information for the "teams" table.
+	TeamsTable = &schema.Table{
+		Name:       "teams",
+		Columns:    TeamsColumns,
+		PrimaryKey: []*schema.Column{TeamsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "player_matches_player_id",
-				Columns:    []*schema.Column{PlayerMatchesColumns[0]},
-				RefColumns: []*schema.Column{PlayersColumns[0]},
+				Symbol:     "teams_matches_teams",
+				Columns:    []*schema.Column{TeamsColumns[2]},
+				RefColumns: []*schema.Column{MatchesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// TeamPlayersColumns holds the columns for the "team_players" table.
+	TeamPlayersColumns = []*schema.Column{
+		{Name: "team_id", Type: field.TypeInt},
+		{Name: "player_id", Type: field.TypeInt},
+	}
+	// TeamPlayersTable holds the schema information for the "team_players" table.
+	TeamPlayersTable = &schema.Table{
+		Name:       "team_players",
+		Columns:    TeamPlayersColumns,
+		PrimaryKey: []*schema.Column{TeamPlayersColumns[0], TeamPlayersColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "team_players_team_id",
+				Columns:    []*schema.Column{TeamPlayersColumns[0]},
+				RefColumns: []*schema.Column{TeamsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 			{
-				Symbol:     "player_matches_match_id",
-				Columns:    []*schema.Column{PlayerMatchesColumns[1]},
-				RefColumns: []*schema.Column{MatchesColumns[0]},
+				Symbol:     "team_players_player_id",
+				Columns:    []*schema.Column{TeamPlayersColumns[1]},
+				RefColumns: []*schema.Column{PlayersColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 		},
@@ -89,13 +110,15 @@ var (
 		EventsTable,
 		MatchesTable,
 		PlayersTable,
-		PlayerMatchesTable,
+		TeamsTable,
+		TeamPlayersTable,
 	}
 )
 
 func init() {
 	EventsTable.ForeignKeys[0].RefTable = MatchesTable
 	EventsTable.ForeignKeys[1].RefTable = PlayersTable
-	PlayerMatchesTable.ForeignKeys[0].RefTable = PlayersTable
-	PlayerMatchesTable.ForeignKeys[1].RefTable = MatchesTable
+	TeamsTable.ForeignKeys[0].RefTable = MatchesTable
+	TeamPlayersTable.ForeignKeys[0].RefTable = TeamsTable
+	TeamPlayersTable.ForeignKeys[1].RefTable = PlayersTable
 }
