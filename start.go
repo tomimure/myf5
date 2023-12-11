@@ -22,7 +22,8 @@ func main() {
 	if err := client.Schema.Create(context.Background()); err != nil {
 		log.Fatalf("failed creating schema resources: %v", err)
 	}
-	StartServer()
+	Matchmaking(client.Player.Query().AllX(context.Background()))
+	// StartServer()
 }
 
 func DatabaseDSN(user, pass, host, port, name string) string {
