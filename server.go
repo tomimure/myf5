@@ -27,7 +27,19 @@ func createPlayer(w http.ResponseWriter, req *http.Request) {
 		w.Write([]byte("400 - Something bad happened!"))
 		return
 	}
-	services.NewPlayerService(client).Create(&requestedData)
+	services.CreatePlayer(client, &requestedData)
+
+}
+
+func getAllPlayers(w http.ResponseWriter, req *http.Request) {
+	players, err := services.GetAllPlayers(client)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("400 - Something bad happened!"))
+		return
+	}
+
+	json.NewEncoder(w).Encode(players)
 
 }
 
@@ -105,11 +117,12 @@ func createTeamsMatchs(w http.ResponseWriter, req *http.Request) {
 
 func StartServer() {
 
-	http.HandleFunc("/createPlayer", createPlayer)
+	http.HandleFunc("/createplayer", createPlayer)
+	http.HandleFunc("/getallplayers", getAllPlayers)
 	http.HandleFunc("/createMatch", createMatch)
 	http.HandleFunc("/getplayersbymatch", getPlayersByMatch)
 	http.HandleFunc("/createMatchmacking", createTeamsMatchs)
-
+	fmt.Println("server 8090 listen")
 	http.ListenAndServe(":8090", nil)
 	defer client.Close()
 }
