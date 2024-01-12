@@ -7,6 +7,8 @@ import (
 	"io"
 	"myf5/ent"
 	"myf5/ent/match"
+	"myf5/ent/player"
+	"myf5/services"
 	"net/http"
 	"time"
 )
@@ -25,21 +27,8 @@ func createPlayer(w http.ResponseWriter, req *http.Request) {
 		w.Write([]byte("400 - Something bad happened!"))
 		return
 	}
-	client.Player.Create().SetGlobal(requestedData.Global).SetName(requestedData.Name).SaveX(context.Background())
-	fmt.Println(client.Player.Query().AllX(context.Background()))
-}
+	services.NewPlayerService(client).Create(&requestedData)
 
-func listOfPlayers(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "%v", client.Player.Query().AllX(context.Background()))
-}
-
-func headers(w http.ResponseWriter, req *http.Request) {
-
-	for name, headers := range req.Header {
-		for _, h := range headers {
-			fmt.Fprintf(w, "%v: %v\n", name, h)
-		}
-	}
 }
 
 func createMatch(w http.ResponseWriter, req *http.Request) {
@@ -82,17 +71,45 @@ func getPlayersByMatch(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	match := client.Match.Query().Where(match.ID(requestedData.ID)).QueryTeams().QueryPlayers().AllX(context.Background())
+
 	json.NewEncoder(w).Encode(match)
+
+}
+
+func createTeamsMatchs(w http.ResponseWriter, req *http.Request) {
+	type bodyCreateMatchmacking struct {
+		PlayersByTeam int
+		PlayersIds    []int
+	}
+	var requestedData bodyCreateMatchmacking
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		fmt.Printf("could not read body: %s\n", err)
+	}
+	defer req.Body.Close()
+	err = json.Unmarshal(body, &requestedData)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("400 Bad Request!"))
+		return
+	}
+	if len(requestedData.PlayersIds) == (2 * requestedData.PlayersByTeam) {
+		json.NewEncoder(w).Encode(Matchmaking(client.Player.Query().Where(player.IDIn(requestedData.PlayersIds...)).AllX(context.Background())))
+	} else {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("400 Bad Request, incorrect number of ids"))
+		return
+	}
 
 }
 
 func StartServer() {
 
 	http.HandleFunc("/createPlayer", createPlayer)
-	http.HandleFunc("/headers", headers)
-	http.HandleFunc("/playerlist", listOfPlayers)
 	http.HandleFunc("/createMatch", createMatch)
 	http.HandleFunc("/getplayersbymatch", getPlayersByMatch)
+	http.HandleFunc("/createMatchmacking", createTeamsMatchs)
 
 	http.ListenAndServe(":8090", nil)
+	defer client.Close()
 }

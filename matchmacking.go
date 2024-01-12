@@ -1,13 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"myf5/ent"
 	"sort"
 )
 
-func Matchmaking(players []*ent.Player) {
-	fmt.Println(players)
+func Matchmaking(players []*ent.Player) [][]*ent.Player {
 	var team1 []*ent.Player
 	var team2 []*ent.Player
 	sort.Slice(players, func(i, j int) bool {
@@ -20,9 +18,9 @@ func Matchmaking(players []*ent.Player) {
 			team1 = append(team1, players[i])
 		}
 	}
-	fmt.Println(players)
-	fmt.Println(team1)
-	fmt.Println(team2)
+	var response [][]*ent.Player
+	response = append(response, team1, team2)
+	return response
 
 }
 func getGlobal(team []*ent.Player) int {
