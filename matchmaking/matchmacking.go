@@ -1,4 +1,4 @@
-package main
+package matchmaking
 
 import (
 	"myf5/ent"
